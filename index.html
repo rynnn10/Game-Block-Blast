@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Block Blaze</title>
+    <link rel="icon" href="assets/icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="app-container">
+      <div id="main-menu">
+        <h1 class="game-title">Block Blaze</h1>
+        <button id="startGameButton" class="menu-button">Mulai Game</button>
+      </div>
+
+      <div id="game-wrapper" class="hidden">
+        <button id="menu-toggle-button">☰</button>
+
+        <div class="game-container">
+          <div class="score-panel">
+            <div>
+              <h2>SKOR</h2>
+              <div id="scoreValue" class="score-value">0</div>
+            </div>
+            <div>
+              <h2>SKOR TERTINGGI</h2>
+              <div id="highScoreValue" class="highscore-value">0</div>
+            </div>
+          </div>
+
+          <div id="canvas-wrapper">
+            <canvas id="gameCanvas"></canvas>
+          </div>
+
+          <div class="preview-panel">
+            <h2>BLOK BERIKUTNYA</h2>
+            <div
+              id="previewBlocksContainer"
+              class="preview-blocks-container"
+            ></div>
+          </div>
+
+          <button id="restartButton" class="restart-button">Mulai Ulang</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="in-game-menu" class="hidden">
+      <div class="in-game-menu-content">
+        <h2>Menu</h2>
+        <button id="soundToggleButton" class="menu-button">Suara: On</button>
+        <button id="backToMenuButton" class="menu-button">
+          Kembali ke Awal
+        </button>
+        <button id="closeMenuButton" class="menu-button-secondary">
+          Tutup
+        </button>
+      </div>
+    </div>
+
+    <div id="gameOverModal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-icon">🏆</div>
+        <h1>Game Over</h1>
+        <div class="final-scores">
+          <div class="final-score-item">
+            <p>SKOR ANDA</p>
+            <span id="finalScore">0</span>
+          </div>
+          <div class="final-score-item">
+            <p>SKOR TERTINGGI</p>
+            <span id="modalHighScore">0</span>
+          </div>
+        </div>
+        <button id="modalRestartButton" class="modal-restart-button">
+          Main Lagi
+        </button>
+      </div>
+    </div>
+
+    <footer>&copy;Copyright by Riyan 2025</footer>
+
+    <audio id="background-sound" src="bgsound.mp3" loop></audio>
+    <audio id="place-sound" src="place.mp3"></audio>
+    <audio id="clear-sound" src="clear.mp3"></audio>
+    <audio id="bomb-sound" src="bomb.mp3"></audio>
+    <audio id="gameover-sound" src="gameover.mp3"></audio>
+
+    <script src="script.js" defer></script>
+  </body>
+</html>
