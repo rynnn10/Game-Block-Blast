@@ -30,25 +30,62 @@ body {
 #app-container {
   padding-bottom: 4rem; /* Beri ruang aman di bawah untuk footer */
 }
-
-/* Judul Game dengan Animasi */
-.game-title {
-  font-size: 3rem;
-  font-weight: 700;
-  color: #ffd700;
-  text-align: center;
-  animation: gold-glow 2s ease-in-out infinite alternate;
-  margin-bottom: 2rem;
-  letter-spacing: 2px;
+/* style.css */
+/* Judul Game dengan Gaya Teks Balok Puzzle */
+.game-title-blocks {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
 }
 
-@keyframes gold-glow {
-  from {
-    text-shadow: 0 0 10px #fff, 0 0 20px #ffd700, 0 0 30px #ffa500;
-  }
-  to {
-    text-shadow: 0 0 20px #fff, 0 0 30px #ffd700, 0 0 40px #ffa500;
-  }
+.title-word {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Wadah untuk satu huruf, menggunakan grid */
+.letter {
+  display: grid;
+  grid-template-columns: repeat(
+    3,
+    1fr
+  ); /* Setiap huruf terdiri dari 3 kolom piksel */
+  gap: 4px;
+}
+
+/* Piksel individual yang membentuk huruf */
+.pixel {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background-color: transparent; /* Piksel kosong secara default transparan */
+  transition: all 0.3s ease;
+}
+
+/* Piksel yang terisi akan memiliki warna */
+.pixel.c1 {
+  background-color: #48bb78;
+}
+.pixel.c2 {
+  background-color: #ed8936;
+}
+.pixel.c3 {
+  background-color: #4299e1;
+}
+.pixel.c4 {
+  background-color: #ecc94b;
+}
+.pixel.c5 {
+  background-color: #f56565;
+}
+
+/* Efek hover yang menyenangkan pada piksel yang terisi */
+.pixel:hover {
+  transform: scale(1.5);
+  filter: brightness(1.2);
+  box-shadow: 0 0 10px currentColor;
 }
 
 /* Halaman Menu Utama */
@@ -103,7 +140,7 @@ body {
   align-items: center;
   gap: 1rem;
   padding: 1rem;
-  padding-top: 60px; /* [DITAMBAHKAN] Memberi ruang di atas untuk tombol menu */
+  padding-top: 20px; /* [DITAMBAHKAN] Memberi ruang di atas untuk tombol menu */
   background-color: var(--panel-bg);
   border-radius: 1rem;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
@@ -113,18 +150,70 @@ body {
   position: relative;
   margin-bottom: 10px;
 }
-/* Tombol dan Panel Menu Dalam Game */
+/* [DITAMBAHKAN] Gaya untuk konten di modal info */
+.info-content {
+  text-align: left;
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  color: var(--text-muted);
+}
+
+.info-content p {
+  line-height: 1.6;
+}
+
+.info-content strong {
+  color: var(--accent-green);
+}
+/* [DITAMBAHKAN] Gaya untuk kontainer skor tertinggi */
+.high-scores-container {
+  margin-top: 2.5rem;
+  width: 100%;
+  max-width: 350px;
+  background-color: var(--panel-bg);
+  padding: 1.5rem;
+  border-radius: 1rem;
+  text-align: center;
+}
+
+.high-scores-container h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--accent-yellow);
+}
+
+#highScoresList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+#highScoresList li {
+  font-size: 1.1rem;
+  color: var(--text-light);
+  background-color: var(--dark-bg);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: bold;
+}
 #menu-toggle-button {
   position: absolute;
-  top: 1.5rem;
-  left: 1.5rem;
+  top: 1rem; /* [DIUBAH] Lebih dekat ke atas */
+  right: 1rem; /* [DIUBAH] Pindahkan ke kanan */
+  left: auto; /* [DIUBAH] Hapus posisi kiri */
   background-color: rgba(45, 55, 72, 0.8);
   border: 1px solid #4a5568;
   color: white;
-  width: 50px;
-  height: 50px;
+  width: 45px; /* [DIUBAH] Sedikit lebih kecil */
+  height: 45px; /* [DIUBAH] Sedikit lebih kecil */
   border-radius: 50%;
-  font-size: 1.5rem;
+  font-size: 1.25rem; /* [DIUBAH] Sesuaikan ukuran ikon */
   cursor: pointer;
   z-index: 1010;
   display: flex;
@@ -318,7 +407,7 @@ footer {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 2500;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -339,7 +428,8 @@ footer {
   transition: transform 0.3s ease;
   max-height: 85vh; /* Batasi tinggi maksimal hingga 85% dari tinggi layar */
   overflow-y: auto; /* Tambahkan scroll jika konten lebih tinggi */
-  padding-right: 1rem; /* Beri ruang untuk scrollbar agar tidak menutupi konten */
+  display: flex;
+  flex-direction: column;
 }
 .modal-overlay.show .modal-content {
   transform: scale(1);
@@ -390,21 +480,63 @@ footer {
   box-shadow: 0 4px 10px rgba(72, 187, 120, 0.3);
 }
 
+.in-game-highscore {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background-color: rgba(45, 55, 72, 0.8);
+  border: 1px solid #4a5568;
+  color: var(--accent-yellow);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  z-index: 1010;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Gaya untuk Tombol Tutup Modal */
+.modal-close-icon {
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  font-size: 2.5rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.2s ease;
+}
+
+.modal-close-icon:hover {
+  color: var(--text-light);
+}
+
 @media (min-width: 738px) {
-  .game-title {
-    font-size: 4.5rem;
+  .in-game-highscore {
+    display: none;
+  }
+  .title-block {
+    width: 50px;
+    height: 50px;
+  }
+  .game-title-blocks {
+    gap: 0.75rem;
+  }
+  .title-word {
+    gap: 0.75rem;
   }
   .game-container {
     display: grid;
     padding: 1.5rem; /* [DIPERBAIKI] Kembalikan padding normal di desktop */
     grid-template-columns: 1fr 240px;
     grid-template-rows: auto auto 1fr;
-    grid-template-areas:
-      "canvas score"
-      "canvas preview"
-      "canvas restart";
     align-items: start;
     gap: 1.5rem;
+    grid-template-areas:
+      "canvas score"
+      "canvas preview";
   }
   #game-wrapper {
     padding: 0;
@@ -422,12 +554,6 @@ footer {
   }
   .preview-panel {
     grid-area: preview;
-    width: 100%;
-    max-width: none;
-  }
-  .restart-button {
-    grid-area: restart;
-    align-self: end;
     width: 100%;
     max-width: none;
   }

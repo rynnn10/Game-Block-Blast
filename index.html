@@ -17,11 +17,122 @@
   <body>
     <div id="app-container">
       <div id="main-menu">
-        <h1 class="game-title">Block Blaze</h1>
+        <div class="game-title-blocks">
+          <div class="title-word">
+            <div class="letter">
+              <span class="pixel c1"></span><span class="pixel c1"></span
+              ><span class="pixel c1"></span> <span class="pixel c1"></span
+              ><span class="pixel"></span><span class="pixel c1"></span>
+              <span class="pixel c1"></span><span class="pixel c1"></span
+              ><span class="pixel c1"></span> <span class="pixel c1"></span
+              ><span class="pixel"></span><span class="pixel c1"></span>
+              <span class="pixel c1"></span><span class="pixel c1"></span
+              ><span class="pixel c1"></span>
+            </div>
+            <div class="letter">
+              <span class="pixel c2"></span><span class="pixel"></span
+              ><span class="pixel"></span> <span class="pixel c2"></span
+              ><span class="pixel"></span><span class="pixel"></span>
+              <span class="pixel c2"></span><span class="pixel"></span
+              ><span class="pixel"></span> <span class="pixel c2"></span
+              ><span class="pixel"></span><span class="pixel"></span>
+              <span class="pixel c2"></span><span class="pixel c2"></span
+              ><span class="pixel c2"></span>
+            </div>
+            <div class="letter">
+              <span class="pixel c3"></span><span class="pixel c3"></span
+              ><span class="pixel c3"></span> <span class="pixel c3"></span
+              ><span class="pixel"></span><span class="pixel c3"></span>
+              <span class="pixel c3"></span><span class="pixel"></span
+              ><span class="pixel c3"></span> <span class="pixel c3"></span
+              ><span class="pixel"></span><span class="pixel c3"></span>
+              <span class="pixel c3"></span><span class="pixel c3"></span
+              ><span class="pixel c3"></span>
+            </div>
+            <div class="letter">
+              <span class="pixel c4"></span><span class="pixel c4"></span
+              ><span class="pixel c4"></span> <span class="pixel c4"></span
+              ><span class="pixel"></span><span class="pixel"></span>
+              <span class="pixel c4"></span><span class="pixel"></span
+              ><span class="pixel"></span> <span class="pixel c4"></span
+              ><span class="pixel"></span><span class="pixel"></span>
+              <span class="pixel c4"></span><span class="pixel c4"></span
+              ><span class="pixel c4"></span>
+            </div>
+            <div class="letter">
+              <span class="pixel c5"></span><span class="pixel"></span
+              ><span class="pixel c5"></span> <span class="pixel c5"></span
+              ><span class="pixel c5"></span><span class="pixel"></span>
+              <span class="pixel c5"></span><span class="pixel c5"></span
+              ><span class="pixel c5"></span> <span class="pixel c5"></span
+              ><span class="pixel"></span><span class="pixel c5"></span>
+              <span class="pixel c5"></span><span class="pixel"></span
+              ><span class="pixel c5"></span>
+            </div>
+          </div>
+          <div class="title-word">
+            <div class="letter">
+              <span class="pixel c1"></span><span class="pixel c1"></span
+              ><span class="pixel c1"></span> <span class="pixel c1"></span
+              ><span class="pixel"></span><span class="pixel c1"></span>
+              <span class="pixel c1"></span><span class="pixel c1"></span
+              ><span class="pixel c1"></span> <span class="pixel c1"></span
+              ><span class="pixel"></span><span class="pixel c1"></span>
+              <span class="pixel c1"></span><span class="pixel c1"></span
+              ><span class="pixel c1"></span>
+            </div>
+            <div class="letter">
+              <span class="pixel c2"></span><span class="pixel"></span
+              ><span class="pixel"></span> <span class="pixel c2"></span
+              ><span class="pixel"></span><span class="pixel"></span>
+              <span class="pixel c2"></span><span class="pixel"></span
+              ><span class="pixel"></span> <span class="pixel c2"></span
+              ><span class="pixel"></span><span class="pixel"></span>
+              <span class="pixel c2"></span><span class="pixel c2"></span
+              ><span class="pixel c2"></span>
+            </div>
+            <div class="letter">
+              <span class="pixel c3"></span><span class="pixel c3"></span
+              ><span class="pixel c3"></span> <span class="pixel c3"></span
+              ><span class="pixel"></span><span class="pixel c3"></span>
+              <span class="pixel c3"></span><span class="pixel c3"></span
+              ><span class="pixel c3"></span> <span class="pixel c3"></span
+              ><span class="pixel"></span><span class="pixel c3"></span>
+              <span class="pixel c3"></span><span class="pixel"></span
+              ><span class="pixel c3"></span>
+            </div>
+            <div class="letter">
+              <span class="pixel c4"></span><span class="pixel c4"></span
+              ><span class="pixel c4"></span> <span class="pixel"></span
+              ><span class="pixel"></span><span class="pixel c4"></span>
+              <span class="pixel"></span><span class="pixel c4"></span
+              ><span class="pixel"></span> <span class="pixel c4"></span
+              ><span class="pixel"></span><span class="pixel"></span>
+              <span class="pixel c4"></span><span class="pixel c4"></span
+              ><span class="pixel c4"></span>
+            </div>
+            <div class="letter">
+              <span class="pixel c5"></span><span class="pixel c5"></span
+              ><span class="pixel c5"></span> <span class="pixel c5"></span
+              ><span class="pixel"></span><span class="pixel"></span>
+              <span class="pixel c5"></span><span class="pixel c5"></span
+              ><span class="pixel"></span> <span class="pixel c5"></span
+              ><span class="pixel"></span><span class="pixel"></span>
+              <span class="pixel c5"></span><span class="pixel c5"></span
+              ><span class="pixel c5"></span>
+            </div>
+          </div>
+        </div>
         <button id="startGameButton" class="menu-button">Mulai Game</button>
+        <button id="mainMenuInfoButton" class="menu-button-secondary">
+          Cara Bermain
+        </button>
       </div>
 
       <div id="game-wrapper" class="hidden">
+        <div id="inGameHighScore" class="in-game-highscore">
+          🏆 <span id="inGameHighScoreValue">0</span>
+        </div>
         <button id="menu-toggle-button">☰</button>
 
         <div class="game-container">
@@ -47,8 +158,6 @@
               class="preview-blocks-container"
             ></div>
           </div>
-
-          <button id="restartButton" class="restart-button">Mulai Ulang</button>
         </div>
       </div>
     </div>
@@ -56,6 +165,8 @@
     <div id="in-game-menu" class="hidden">
       <div class="in-game-menu-content">
         <h2>Menu</h2>
+        <button id="menuRestartButton" class="menu-button">Mulai Ulang</button>
+        <button id="inGameInfoButton" class="menu-button">Cara Bermain</button>
         <button id="soundToggleButton" class="menu-button">Suara: On</button>
         <button id="backToMenuButton" class="menu-button">
           Kembali ke Awal
@@ -85,7 +196,35 @@
         </button>
       </div>
     </div>
-
+    <div id="infoModal" class="modal-overlay">
+      <div class="modal-content">
+        <span id="infoModalCloseIcon" class="modal-close-icon">&times;</span>
+        <div class="modal-icon">ℹ️</div>
+        <h1>Cara Bermain</h1>
+        <div class="info-content">
+          <p>Seret tiga blok dari bawah dan letakkan di papan 8x8.</p>
+          <p>
+            Isi baris atau kolom secara penuh untuk membersihkannya dan
+            mendapatkan skor.
+          </p>
+          <p>
+            Dapatkan skor kombo dengan membersihkan beberapa baris/kolom
+            sekaligus!
+          </p>
+          <p>
+            Gunakan <strong>bom</strong> untuk membersihkan area 3x3 di
+            sekitarnya.
+          </p>
+          <p>
+            Game berakhir jika tidak ada lagi tempat untuk meletakkan blok yang
+            tersedia.
+          </p>
+        </div>
+        <button id="closeInfoModalButton" class="modal-restart-button">
+          Mengerti
+        </button>
+      </div>
+    </div>
     <footer>&copy;Copyright by Riyan 2025</footer>
 
     <audio id="background-sound" src="bgsound.mp3" loop></audio>
@@ -93,6 +232,7 @@
     <audio id="clear-sound" src="clear.mp3"></audio>
     <audio id="bomb-sound" src="bomb.mp3"></audio>
     <audio id="gameover-sound" src="gameover.mp3"></audio>
+    <audio id="combo-sound" src="goodfix.mp3"></audio>
 
     <script src="script.js" defer></script>
   </body>
