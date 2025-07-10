@@ -96,6 +96,7 @@ body {
   align-items: center;
   min-height: 100vh;
   padding: 1rem;
+  position: relative;
 }
 
 .menu-button,
@@ -117,7 +118,11 @@ body {
   transform: translateY(-3px);
   box-shadow: 0 4px 15px rgba(66, 153, 225, 0.4);
 }
+#continueGameButton {
+  margin: 1rem;
+}
 .menu-button-secondary {
+  margin: 1rem;
   background-color: #4a5568;
 }
 .menu-button-secondary:hover {
@@ -513,6 +518,80 @@ footer {
   color: var(--text-light);
 }
 
+/* Gaya untuk Ikon di Pojok Atas Menu */
+#top-bar-menu {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  right: 1rem;
+  width: calc(100% - 2rem);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 100;
+}
+
+.top-bar-item {
+  background-color: var(--panel-bg);
+  color: var(--text-light);
+  padding: 0.75rem 1.25rem;
+  border-radius: 25px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.top-bar-item:hover {
+  transform: translateY(-2px);
+  background-color: var(--accent-blue);
+}
+
+.top-bar-item span {
+  font-size: 1.2rem;
+  color: var(--accent-yellow);
+}
+
+/* Penyesuaian untuk modal peringkat */
+#highScoresModal .modal-content ol {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+#highScoresModal .modal-content li {
+  font-size: 1.5rem;
+  font-weight: bold;
+  background-color: var(--dark-bg);
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  color: white;
+  padding-left: 50px;
+  text-align: left;
+}
+
+#highScoresModal .modal-content button {
+  background: #718096;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+#highScoresModal .modal-content button:hover {
+  background: #e53e3e;
+}
+
 @media (min-width: 738px) {
   .in-game-highscore {
     display: none;
@@ -557,4 +636,57 @@ footer {
     width: 100%;
     max-width: none;
   }
+}
+
+@keyframes title-blink {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.8) drop-shadow(0 0 5px currentColor);
+  }
+}
+
+/* Kelas yang akan kita tambahkan melalui JavaScript untuk memicu animasi */
+.blinking {
+  animation: title-blink 1.5s ease-in-out;
+}
+/* style.css */
+
+/* [TAMBAHKAN KODE INI] */
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  50% {
+    transform: translateX(5px);
+  }
+  75% {
+    transform: translateX(-5px);
+  }
+}
+
+canvas.shake {
+  animation: shake 0.3s ease-in-out;
+}
+
+.modal-share-button {
+  background-color: #007bff; /* Contoh warna biru */
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-top: 1rem;
+  transition: background-color 0.3s ease;
+}
+
+.modal-share-button:hover {
+  background-color: #0056b3;
 }

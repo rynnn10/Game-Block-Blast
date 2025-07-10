@@ -17,6 +17,15 @@
   <body>
     <div id="app-container">
       <div id="main-menu">
+        <div id="top-bar-menu">
+          <div
+            id="top-bar-highscore"
+            class="top-bar-item"
+            title="Skor Tertinggi"
+          >
+            🏆 <span>0</span>
+          </div>
+        </div>
         <div class="game-title-blocks">
           <div class="title-word">
             <div class="letter">
@@ -123,12 +132,14 @@
             </div>
           </div>
         </div>
+        <button id="continueGameButton" class="menu-button hidden">
+          Lanjutkan
+        </button>
         <button id="startGameButton" class="menu-button">Mulai Game</button>
         <button id="mainMenuInfoButton" class="menu-button-secondary">
           Cara Bermain
         </button>
       </div>
-
       <div id="game-wrapper" class="hidden">
         <div id="inGameHighScore" class="in-game-highscore">
           🏆 <span id="inGameHighScoreValue">0</span>
@@ -194,6 +205,13 @@
         <button id="modalRestartButton" class="modal-restart-button">
           Main Lagi
         </button>
+        <button
+          id="shareScoreGameOver"
+          class="modal-share-button"
+          title="Bagikan Skor"
+        >
+          Bagikan 📤
+        </button>
       </div>
     </div>
     <div id="infoModal" class="modal-overlay">
@@ -202,22 +220,38 @@
         <div class="modal-icon">ℹ️</div>
         <h1>Cara Bermain</h1>
         <div class="info-content">
-          <p>Seret tiga blok dari bawah dan letakkan di papan 8x8.</p>
           <p>
-            Isi baris atau kolom secara penuh untuk membersihkannya dan
-            mendapatkan skor.
+            <strong>Dasar Permainan:</strong> Seret tiga blok dari bawah dan
+            letakkan di papan 8x8. Isi baris atau kolom secara penuh untuk
+            membersihkannya dari papan.
           </p>
           <p>
-            Dapatkan skor kombo dengan membersihkan beberapa baris/kolom
-            sekaligus!
+            <strong>Cara Mendapatkan Skor:</strong>
+            Anda mendapat skor untuk setiap blok yang diletakkan. Skor utama
+            didapat dari membersihkan baris dan kolom. Dapatkan
+            <strong>skor kombo</strong> dengan membersihkan beberapa baris/kolom
+            sekaligus atau secara berurutan!
           </p>
           <p>
-            Gunakan <strong>bom</strong> untuk membersihkan area 3x3 di
-            sekitarnya.
+            <strong>Blok Pengganda (Multiplier):</strong> Beberapa blok yang
+            Anda letakkan mungkin secara acak mendapatkan
+            <strong>pengganda skor (x2, x3, dst.)</strong>. Bersihkan baris yang
+            berisi blok ini untuk melipatgandakan skor Anda!<br />
+            <em
+              >Peringatan: Pengganda ini akan
+              <strong>berkurang nilainya</strong> setiap Anda membuat langkah
+              baru, jadi manfaatkan segera!</em
+            >
           </p>
           <p>
-            Game berakhir jika tidak ada lagi tempat untuk meletakkan blok yang
-            tersedia.
+            <strong>Blok Spesial - Bom:</strong> Gunakan <strong>bom</strong>
+            untuk membersihkan area 3x3 di sekitarnya dan mendapatkan poin
+            bonus. Sangat berguna dalam situasi sulit!
+          </p>
+          <p>
+            <strong>Game Berakhir:</strong> Permainan selesai jika tidak ada
+            lagi ruang yang cukup di papan untuk meletakkan salah satu dari tiga
+            blok yang tersedia.
           </p>
         </div>
         <button id="closeInfoModalButton" class="modal-restart-button">
@@ -232,8 +266,28 @@
     <audio id="clear-sound" src="clear.mp3"></audio>
     <audio id="bomb-sound" src="bomb.mp3"></audio>
     <audio id="gameover-sound" src="gameover.mp3"></audio>
-    <audio id="combo-sound" src="goodfix.mp3"></audio>
-
+    <audio id="goodSound" src="goodfix.mp3"></audio>
+    <audio id="greatSound" src="greatjfix.mp3"></audio>
+    <audio id="unbelievableSound" src="unbelievablefix.mp3"></audio>
+    <audio id="error-sound" src="error.mp3"></audio>
+    <div id="highScoresModal" class="modal-overlay">
+      <div class="modal-content">
+        <span id="closeHighScoresModal" class="modal-close-icon">&times;</span>
+        <div class="modal-icon">🏆</div>
+        <h1>Peringkat Teratas</h1>
+        <ol id="highScoresListModal"></ol>
+        <button id="resetScoresButtonModal" title="Reset semua skor">
+          🗑️ Reset
+        </button>
+        <button
+          id="shareScoreRanking"
+          class="modal-share-button"
+          title="Bagikan Peringkat"
+        >
+          Bagikan 📤
+        </button>
+      </div>
+    </div>
     <script src="script.js" defer></script>
   </body>
 </html>

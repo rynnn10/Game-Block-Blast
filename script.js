@@ -1,6 +1,7 @@
 // --- REFERENSI ELEMEN DOM ---
 const mainMenu = document.getElementById("main-menu");
 const startGameButton = document.getElementById("startGameButton");
+const continueGameButton = document.getElementById("continueGameButton"); // [TAMBAHKAN INI]
 const gameWrapper = document.getElementById("game-wrapper");
 const menuToggleButton = document.getElementById("menu-toggle-button");
 const inGameMenu = document.getElementById("in-game-menu");
@@ -14,7 +15,10 @@ const placeSound = document.getElementById("place-sound");
 const clearSound = document.getElementById("clear-sound");
 const bombSound = document.getElementById("bomb-sound");
 const gameoverSound = document.getElementById("gameover-sound");
-const comboSound = document.getElementById("combo-sound"); // [DITAMBAHKAN]
+const goodSound = document.getElementById("goodSound");
+const greatSound = document.getElementById("greatSound");
+const unbelievableSound = document.getElementById("unbelievableSound");
+const errorSound = document.getElementById("error-sound"); // [TAMBAHKAN INI]
 
 const canvas = document.getElementById("gameCanvas");
 const canvasWrapper = document.getElementById("canvas-wrapper");
@@ -29,6 +33,15 @@ const gameOverModal = document.getElementById("gameOverModal");
 const finalScoreElem = document.getElementById("finalScore");
 const modalHighScoreElem = document.getElementById("modalHighScore");
 const modalRestartButton = document.getElementById("modalRestartButton");
+// [TAMBAHKAN KODE INI]
+const topBarHighScore = document.getElementById("top-bar-highscore");
+const highScoresModal = document.getElementById("highScoresModal");
+const closeHighScoresModal = document.getElementById("closeHighScoresModal");
+const highScoresListModal = document.getElementById("highScoresListModal");
+const resetScoresButtonModal = document.getElementById(
+  "resetScoresButtonModal"
+);
+const topBarHighScoreValue = topBarHighScore.querySelector("span");
 // [DITAMBAHKAN] Referensi untuk fitur info
 const mainMenuInfoButton = document.getElementById("mainMenuInfoButton");
 const inGameInfoButton = document.getElementById("inGameInfoButton");
@@ -50,8 +63,57 @@ const BOARD_SIZE = 8;
 let BLOCK_SIZE = 40;
 const GRID_COLOR = "#3a475a";
 const EMPTY_CELL_COLOR = "#4a5568";
-// script.js
-const HIGH_SCORE_KEY = "blockBlazeHighScore";
+const HIGH_SCORES_KEY = "blockBlazeHighScores"; // Ganti nama key
+
+// [FUNGSI BARU]
+function showHighScoresModal() {
+  displayHighScores(); // Pastikan data terbaru ditampilkan
+  highScoresModal.classList.add("show");
+}
+
+function hideHighScoresModal() {
+  highScoresModal.classList.remove("show");
+}
+
+// [FUNGSI BARU]
+function loadHighScores() {
+  const scoresJSON = localStorage.getItem(HIGH_SCORES_KEY);
+  return scoresJSON ? JSON.parse(scoresJSON) : [];
+}
+
+// [FUNGSI BARU]
+function saveNewHighScore(newScore) {
+  let scores = loadHighScores();
+  scores.push(newScore);
+  scores.sort((a, b) => b - a); // Urutkan dari tertinggi
+  const topScores = scores.slice(0, 5); // Ambil 5 teratas
+  localStorage.setItem(HIGH_SCORES_KEY, JSON.stringify(topScores));
+  return topScores;
+}
+
+// Ganti fungsi displayHighScores yang lama dengan ini:
+function displayHighScores() {
+  const scores = loadHighScores();
+
+  // Perbarui nilai di ikon pojok kiri atas
+  const topScore = scores.length > 0 ? scores[0] : 0;
+  topBarHighScoreValue.textContent = topScore.toLocaleString("id-ID");
+
+  // Perbarui daftar di dalam modal
+  highScoresListModal.innerHTML = ""; // Kosongkan daftar lama
+
+  if (scores.length === 0) {
+    highScoresListModal.innerHTML = "<li>Belum ada skor</li>";
+  } else {
+    scores.forEach((score, index) => {
+      const li = document.createElement("li");
+      li.innerHTML = `<span style="color: var(--accent-yellow); margin-right: 1rem;">${
+        index + 1
+      }.</span> ${score.toLocaleString("id-ID")}`;
+      highScoresListModal.appendChild(li);
+    });
+  }
+}
 // [DITAMBAHKAN] Kunci untuk menyimpan state game yang sedang berjalan
 const GAME_STATE_KEY = "blockBlazeGameState";
 
@@ -258,6 +320,11 @@ const BLOCK_SHAPES = [
     ],
     color: "#a0aec0",
   },
+  // [BLOK BARU DITAMBAHKAN] Blok lurus panjang untuk meningkatkan peluang kombo
+  { shape: [[1, 1, 1, 1]], color: "#667eea" }, // Lurus 1x4
+  { shape: [[1], [1], [1], [1]], color: "#667eea" }, // Lurus 4x1
+  { shape: [[1, 1, 1, 1, 1]], color: "#ed64a6" }, // Lurus 1x5
+  { shape: [[1], [1], [1], [1], [1]], color: "#ed64a6" }, // Lurus 5x1
 ];
 
 // --- VARIABEL STATE GAME ---
@@ -288,6 +355,14 @@ function goBackToMainMenu() {
   mainMenu.style.display = "flex";
   backgroundSound.pause();
   backgroundSound.currentTime = 0;
+
+  // [PERBAIKAN] Cek kembali state game saat kembali ke menu
+  const savedGame = loadGameState();
+  if (savedGame) {
+    continueGameButton.classList.remove("hidden");
+  } else {
+    continueGameButton.classList.add("hidden");
+  }
 }
 // [DIUBAH] Fungsi untuk memuat gambar dan mengaktifkan tombol start
 function loadBlockImages(callback) {
@@ -354,34 +429,29 @@ function loadBlockImages(callback) {
 }
 // [DIUBAH] initGame kini lebih sederhana
 function initGame() {
+  // Inisialisasi papan dengan array 2D yang benar
   board = Array(BOARD_SIZE)
-    .fill(0)
+    .fill()
     .map(() => Array(BOARD_SIZE).fill(0));
-  // [DITAMBAHKAN] Isi papan dengan beberapa blok acak di awal
-  const initialBlockCount = Math.floor(Math.random() * 5) + 4; // 4-8 blok awal
-  const availableColors = Object.keys(blockImages).filter(
-    (c) => c !== "#f56565"
-  ); // Semua warna kecuali bom
 
-  for (let i = 0; i < initialBlockCount; i++) {
-    const row = Math.floor(Math.random() * BOARD_SIZE);
-    const col = Math.floor(Math.random() * BOARD_SIZE);
-    if (board[row][col] === 0) {
-      const randomColor =
-        availableColors[Math.floor(Math.random() * availableColors.length)];
-      board[row][col] = { color: randomColor, multiplier: 1 };
-    }
-  }
   comboCounter = 0;
-  currentBlocks = [];
   score = 0;
   isGameOver = false;
   selectedBlockIndex = -1;
   isDragging = false;
   ghostBlockPos = { row: -1, col: -1 };
-  highScore = parseInt(localStorage.getItem(HIGH_SCORE_KEY) || "0");
+
+  // Muat high score dari localStorage
+  const scores = loadHighScores();
+  highScore = scores.length > 0 ? scores[0] : 0; // Ambil skor teratas dari array
+
+  // Sembunyikan modal game over jika terbuka
   gameOverModal.classList.remove("show");
+
+  // Generate blok awal
   generateRandomBlocks();
+
+  // Update UI dan gambar papan
   updateUI();
   drawBoard();
 }
@@ -414,6 +484,15 @@ function drawBoard(clearHint = { rows: [], cols: [] }) {
     clearHint.cols.forEach((c) =>
       ctx.fillRect(c * BLOCK_SIZE, 0, BLOCK_SIZE, canvas.height)
     );
+  }
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      if (board[r][c] !== 0) {
+        ctx.strokeStyle = "rgba(255, 0, 0, 0.5)";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(c * BLOCK_SIZE, r * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+      }
+    }
   }
   for (let r = 0; r < BOARD_SIZE; r++) {
     for (let c = 0; c < BOARD_SIZE; c++) {
@@ -505,39 +584,90 @@ function decayMultipliers(clearedCells) {
 }
 
 function generateRandomBlocks() {
-  // Coba cari blok yang dijamin bisa membersihkan baris/kolom
-  const guaranteedBlocks = findGuaranteedClearBlocks();
+  const placeableBlocks = findPlaceableBlocks();
 
-  currentBlocks = Array.from({ length: 3 }, () => {
-    // Tetap berikan sedikit kemungkinan untuk bom
-    if (Math.random() < 0.05) {
-      return { ...BLOCK_SHAPES.find((b) => b.type === "bomb"), placed: false };
-    }
-
-    let chosenBlock;
-    if (guaranteedBlocks.length > 0) {
-      // Jika ada blok solusi, pilih salah satunya secara acak
-      chosenBlock =
-        guaranteedBlocks[Math.floor(Math.random() * guaranteedBlocks.length)];
-    } else {
-      // FALLBACK: Jika tidak ada solusi sama sekali (papan sangat buntu)
-      // Berikan blok kecil secara acak untuk memberi kesempatan
-      console.warn(
-        "Tidak ada solusi ditemukan. Memberikan blok kecil secara acak."
-      );
-      const smallBlocks = BLOCK_SHAPES.filter(
-        (b) => !b.type && b.shape.flat().length <= 3
-      );
-      chosenBlock = smallBlocks[Math.floor(Math.random() * smallBlocks.length)];
-    }
-
-    return { ...chosenBlock, placed: false };
-  });
-
-  // Jika setelah semua logika di atas tidak ada blok (sangat jarang terjadi), panggil game over
-  if (currentBlocks.some((b) => !b)) {
+  if (placeableBlocks.length === 0 && currentBlocks.every((b) => b.placed)) {
     isGameOver = true;
+    gameOverModal.classList.add("show");
+    return;
   }
+
+  // --- LOGIKA ANTI-BUNTU (TETAP SAMA) ---
+  let filledCells = 0;
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      if (board[r][c] !== 0) filledCells++;
+    }
+  }
+  const fullness = filledCells / (BOARD_SIZE * BOARD_SIZE);
+  const DANGER_THRESHOLD = 0.65;
+  let blockPool = [];
+
+  if (fullness > DANGER_THRESHOLD) {
+    const rescueBlocks = placeableBlocks.filter(
+      (b) => b.shape.flat().reduce((a, v) => a + v, 0) <= 2
+    );
+    if (rescueBlocks.length > 0) {
+      blockPool = rescueBlocks;
+    }
+  }
+
+  // --- LOGIKA PRIORITAS KOMBO (TETAP SAMA) ---
+  if (blockPool.length === 0) {
+    const guaranteedTiers = findGuaranteedClearBlocks(placeableBlocks);
+    if (guaranteedTiers.unbelievable.length > 0) {
+      blockPool = guaranteedTiers.unbelievable;
+    } else if (guaranteedTiers.great.length > 0) {
+      blockPool = guaranteedTiers.great;
+    } else if (guaranteedTiers.good.length > 0) {
+      blockPool = guaranteedTiers.good;
+    } else {
+      blockPool = placeableBlocks;
+    }
+  }
+
+  if (blockPool.length === 0) {
+    isGameOver = true;
+    gameOverModal.classList.add("show");
+    return;
+  }
+
+  // --- [LOGIKA BARU] MENCEGAH DUPLIKAT DAN BLOK SPESIAL BERUNTUN ---
+  currentBlocks = [];
+  let specialBlockSpawned = false; // Penanda agar blok spesial hanya muncul sekali
+  const tempPool = [...blockPool]; // Salin pool agar bisa dimodifikasi
+
+  for (let i = 0; i < 3; i++) {
+    let chosenBlock;
+    const rand = Math.random();
+
+    // Peluang 7% untuk mendapatkan bom, HANYA jika belum ada blok spesial lain
+    if (!specialBlockSpawned && rand < 0.07) {
+      const bombBlock = BLOCK_SHAPES.find((b) => b.type === "bomb");
+      if (bombBlock) {
+        chosenBlock = bombBlock;
+        specialBlockSpawned = true; // Set penanda
+      }
+    }
+
+    // Jika tidak dapat blok spesial, ambil dari pool biasa
+    if (!chosenBlock) {
+      if (tempPool.length > 0) {
+        const randomIndex = Math.floor(Math.random() * tempPool.length);
+        chosenBlock = tempPool[randomIndex];
+        // Hapus blok yang sudah dipilih dari pool sementara untuk mengurangi duplikat
+        tempPool.splice(randomIndex, 1);
+      } else {
+        // Jika pool sementara habis, ambil lagi dari pool utama
+        const randomIndex = Math.floor(Math.random() * blockPool.length);
+        chosenBlock = blockPool[randomIndex];
+      }
+    }
+
+    currentBlocks.push({ ...chosenBlock, placed: false });
+  }
+
+  updateUI();
 }
 
 function drawPreviewBlocks() {
@@ -590,19 +720,33 @@ function drawPreviewBlocks() {
 }
 
 function isValidPlacement(blockShape, startRow, startCol) {
+  // Pastikan startRow dan startCol valid
+  if (startRow < 0 || startCol < 0) return false;
+
+  // Hitung ujung bawah dan kanan blok
+  const endRow = startRow + blockShape.length;
+  const endCol = startCol + blockShape[0].length;
+
+  // Jika melebihi batas papan
+  if (endRow > BOARD_SIZE || endCol > BOARD_SIZE) return false;
+
+  // Periksa setiap sel blok
   for (let r = 0; r < blockShape.length; r++) {
     for (let c = 0; c < blockShape[r].length; c++) {
       if (blockShape[r][c]) {
         const boardR = startRow + r;
         const boardC = startCol + c;
+
+        // Periksa apakah sel di papan sudah terisi
+        // Pastikan kita memeriksa board[boardR] dan board[boardR][boardC] ada
         if (
           boardR >= BOARD_SIZE ||
           boardC >= BOARD_SIZE ||
-          boardR < 0 ||
-          boardC < 0 ||
-          board[boardR]?.[boardC] !== 0
-        )
+          !board[boardR] ||
+          board[boardR][boardC] !== 0
+        ) {
           return false;
+        }
       }
     }
   }
@@ -610,85 +754,131 @@ function isValidPlacement(blockShape, startRow, startCol) {
 }
 
 async function placeBlock(blockIndex, startRow, startCol) {
-  // [DIUBAH] Jadikan fungsi ini async
-  const block = currentBlocks[blockIndex];
-  if (!block || block.placed) return false;
+  try {
+    const block = currentBlocks[blockIndex];
+    if (!block || block.placed) return false;
 
-  if (block.type === "bomb") {
-    if (
-      startRow < 0 ||
-      startRow >= BOARD_SIZE ||
-      startCol < 0 ||
-      startCol >= BOARD_SIZE
-    )
-      return false;
-    detonateBomb(startRow, startCol);
-    score += 1; // [DITAMBAHKAN] Tambah 1 poin untuk meletakkan bom
-    block.placed = true;
-  } else {
-    if (!isValidPlacement(block.shape, startRow, startCol)) {
-      if (isDragging) {
-        canvas.classList.add("shake");
-        setTimeout(() => canvas.classList.remove("shake"), 300);
+    if (block.type === "bomb") {
+      // Logika untuk bom
+      if (
+        startRow < 0 ||
+        startRow >= BOARD_SIZE ||
+        startCol < 0 ||
+        startCol >= BOARD_SIZE
+      ) {
+        return false;
       }
-      return false;
-    }
-    const isBonusBlock = Math.random() < 0.2;
-    const bonusValue = isBonusBlock ? Math.floor(Math.random() * 2) + 6 : 1;
-    const filledCells = [];
-    for (let r = 0; r < block.shape.length; r++) {
-      for (let c = 0; c < block.shape[r].length; c++) {
-        if (block.shape[r][c]) {
-          filledCells.push({ r, c });
+      // [PERBAIKAN] Tambahkan pengecekan apakah petak target kosong
+      if (board[startRow][startCol] !== 0) {
+        return false; // Batalkan jika petak sudah terisi
+      }
+      detonateBomb(startRow, startCol);
+      score += 1;
+      block.placed = true;
+    } else {
+      // Logika untuk blok biasa
+      if (!isValidPlacement(block.shape, startRow, startCol)) {
+        if (isDragging) {
+          playSound(errorSound); // [TAMBAHKAN INI] Mainkan suara error
+          canvas.classList.add("shake");
+          setTimeout(() => canvas.classList.remove("shake"), 300);
         }
+        return false;
       }
-    }
-    let bonusCell = null;
-    if (isBonusBlock && filledCells.length > 0) {
-      bonusCell = filledCells[Math.floor(Math.random() * filledCells.length)];
-    }
-    for (let r = 0; r < block.shape.length; r++) {
-      for (let c = 0; c < block.shape[r].length; c++) {
-        if (block.shape[r][c]) {
-          let currentMultiplier = 1;
-          if (bonusCell && bonusCell.r === r && bonusCell.c === c) {
-            currentMultiplier = bonusValue;
+
+      // [LOGIKA DIUBAH 1/3]
+      // Tempatkan blok ke papan dengan multiplier default 1.
+      // Peluang bonus akan diterapkan NANTI setelah clear.
+      for (let r = 0; r < block.shape.length; r++) {
+        for (let c = 0; c < block.shape[r].length; c++) {
+          if (block.shape[r][c]) {
+            board[startRow + r][startCol + c] = {
+              color: block.color,
+              multiplier: 1,
+            };
           }
-          board[startRow + r][startCol + c] = {
-            color: block.color,
-            multiplier: currentMultiplier,
-          };
+        }
+      }
+
+      playSound(placeSound);
+      const blockSize = block.shape.flat().reduce((a, v) => a + v, 0);
+      score += blockSize;
+      block.placed = true;
+    }
+
+    // Periksa dan bersihkan garis, dan dapatkan daftar sel yang terhapus
+    const clearResult = await checkAndClearLines(
+      block.shape,
+      startRow,
+      startCol
+    );
+    if (!clearResult.cleared) {
+      comboCounter = 0;
+    }
+
+    // [LOGIKA DIUBAH 2/3]
+    // Setelah clear, terapkan peluang multiplier HANYA pada sel yang selamat.
+    if (block.type !== "bomb") {
+      for (let r = 0; r < block.shape.length; r++) {
+        for (let c = 0; c < block.shape[r].length; c++) {
+          if (block.shape[r][c]) {
+            const boardR = startRow + r;
+            const boardC = startCol + c;
+            const cellKey = `${boardR}-${boardC}`;
+
+            if (!clearResult.clearedCells.has(cellKey)) {
+              // [DIUBAH] Logika peluang berjenjang untuk multiplier
+              const rand = Math.random();
+              let newMultiplier = 1;
+
+              // Peluang 2% untuk menjadi x7 (sangat langka)
+              if (rand < 0.02) {
+                newMultiplier = 7;
+                // Peluang 5% berikutnya untuk menjadi x6 (langka)
+              } else if (rand < 0.07) {
+                newMultiplier = 6;
+                // Peluang 10% berikutnya untuk menjadi x3 (cukup sering)
+              } else if (rand < 0.17) {
+                newMultiplier = 3;
+                // Peluang 18% berikutnya untuk menjadi x2 (sering)
+              } else if (rand < 0.35) {
+                newMultiplier = 2;
+              }
+
+              if (newMultiplier > 1) {
+                // Pastikan sel masih ada di papan sebelum diubah
+                if (board[boardR] && board[boardR][boardC]) {
+                  board[boardR][boardC].multiplier = newMultiplier;
+                }
+              }
+            }
+          }
         }
       }
     }
-    playSound(placeSound);
-    const blockSize = block.shape.flat().reduce((a, v) => a + v, 0);
-    score += blockSize;
-    block.placed = true;
+
+    // [LOGIKA DIUBAH 3/3]
+    // Panggil decayMultipliers SETELAH semua proses di atas selesai.
+    decayMultipliers(clearResult.clearedCells);
+
+    if (currentBlocks.every((b) => b.placed)) {
+      generateRandomBlocks();
+    }
+
+    updateUI();
+    // Panggil drawBoard lagi untuk memastikan multiplier baru tergambar
+    drawBoard();
+    setTimeout(checkGameOver, 50);
+
+    if (!isGameOver) {
+      saveGameState();
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error in placeBlock:", error);
+    return false;
   }
-
-  // [DIUBAH] Logika async disederhanakan dan ditunggu (await)
-  const clearResult = await checkAndClearLines(
-    true,
-    block.shape,
-    startRow,
-    startCol
-  );
-  decayMultipliers(clearResult.clearedCells);
-
-  if (currentBlocks.every((b) => b.placed)) {
-    generateRandomBlocks();
-  }
-
-  updateUI();
-  setTimeout(checkGameOver, 50);
-
-  // [DIUBAH] Pindahkan saveGameState ke paling akhir untuk memastikan semua perubahan (termasuk decay) tersimpan
-  if (!isGameOver) {
-    saveGameState();
-  }
-
-  return true;
 }
 
 // [DITAMBAHKAN] Fungsi untuk mengecek potensi clear
@@ -797,15 +987,10 @@ async function drawClearAnimation(rows, cols) {
 }
 
 async function checkAndClearLines(
-  isFirstClear = false,
   placedBlockShape = null,
   placedBlockRow = -1,
   placedBlockCol = -1
 ) {
-  if (isFirstClear) {
-    comboCounter = 0;
-  }
-
   let rowsToClear = [],
     colsToClear = [];
   for (let i = 0; i < BOARD_SIZE; i++) {
@@ -817,7 +1002,6 @@ async function checkAndClearLines(
 
   if (totalLines > 0) {
     comboCounter++;
-    playSound(clearSound);
     await drawClearAnimation(rowsToClear, colsToClear);
 
     const cellsToClearNow = new Set();
@@ -871,14 +1055,37 @@ async function checkAndClearLines(
 
     const popupY = (rowsToClear[0] ?? 0) * BLOCK_SIZE;
     const popupX = (colsToClear[0] ?? BOARD_SIZE / 2) * BLOCK_SIZE;
+    let soundPlayed = false;
+    // Prioritas utama: clear multi-baris sekaligus
+    if (totalLines >= 4) {
+      playSound(unbelievableSound);
+      soundPlayed = true;
+    } else if (totalLines === 3) {
+      playSound(greatSound);
+      soundPlayed = true;
+    } else if (totalLines === 2) {
+      playSound(goodSound);
+      soundPlayed = true;
+    }
+
+    // Jika tidak ada clear multi-baris, cek apakah ini sebuah combo beruntun
+    if (!soundPlayed && comboCounter >= 2) {
+      playSound(goodSound); // Beri reward "Good!" untuk streak
+      soundPlayed = true;
+    }
+
+    // Jika tidak ada yang spesial, putar suara clear biasa
+    if (!soundPlayed) {
+      playSound(clearSound);
+    }
+
+    // Tampilkan popup (logika ini tetap sama)
     let popupText = `+${totalScoreGained.toLocaleString("id-ID")}`;
     if (currentMultiplier > 1) popupText += ` (Bonus x${currentMultiplier}!)`;
     if (comboCounter > 1) {
       popupText += ` (Kombo x${comboCounter}!)`;
-      if (comboCounter > 1 && totalLines > 1) playSound(comboSound);
     }
     showScorePopup(popupText, popupX, popupY);
-
     rowsToClear.forEach((r) => board[r].fill(0));
     colsToClear.forEach((c) => board.forEach((row) => (row[c] = 0)));
 
@@ -896,6 +1103,33 @@ async function checkAndClearLines(
   }
 
   return { cleared: false, clearedCells: new Set() };
+}
+
+function findPlaceableBlocks() {
+  const placeable = [];
+
+  // Filter hanya blok reguler (bukan bom)
+  const allRegularBlocks = BLOCK_SHAPES.filter((b) => !b.type);
+
+  for (const block of allRegularBlocks) {
+    let canPlace = false;
+
+    // Cari semua posisi yang mungkin untuk blok ini
+    outerLoop: for (let r = 0; r <= BOARD_SIZE - block.shape.length; r++) {
+      for (let c = 0; c <= BOARD_SIZE - block.shape[0].length; c++) {
+        if (isValidPlacement(block.shape, r, c)) {
+          canPlace = true;
+          break outerLoop;
+        }
+      }
+    }
+
+    if (canPlace) {
+      placeable.push(block);
+    }
+  }
+
+  return placeable;
 }
 
 function applyGravity() {
@@ -923,14 +1157,17 @@ function checkGameOver() {
   }
   isGameOver = true;
   playSound(gameoverSound);
-  if (score > highScore) {
-    highScore = score;
-    localStorage.setItem(HIGH_SCORE_KEY, highScore);
-  }
-  finalScoreElem.textContent = score;
-  modalHighScoreElem.textContent = highScore;
+  // [LOGIKA DIUBAH]
+  const updatedHighScores = saveNewHighScore(score);
+  const newHighScore = updatedHighScores.length > 0 ? updatedHighScores[0] : 0;
+
+  finalScoreElem.textContent = score.toLocaleString("id-ID");
+  modalHighScoreElem.textContent = newHighScore.toLocaleString("id-ID");
+  highScoreValueElem.textContent = newHighScore.toLocaleString("id-ID");
+
   gameOverModal.classList.add("show");
-  clearGameState(); // [DITAMBAHKAN] Hapus progres setelah game over
+  clearGameState();
+  displayHighScores(); // Perbarui tampilan di menu utama setelah game over
 }
 
 function getEventCoordinates(e) {
@@ -950,33 +1187,46 @@ function handleDragStart(e) {
   }
 }
 
-// [DITAMBAHKAN] Fungsi untuk mencari semua blok yang bisa membersihkan baris/kolom
-function findGuaranteedClearBlocks() {
-  const clearingBlocks = [];
-  const checkedShapes = new Set(); // Untuk efisiensi, agar tidak mengecek bentuk yang sama berulang kali
-  const allRegularBlocks = BLOCK_SHAPES.filter((b) => !b.type);
+function findGuaranteedClearBlocks(blocksToCheck) {
+  const clearingBlocks = {
+    unbelievable: [], // Untuk clear >= 4 baris
+    great: [], // Untuk clear 3 baris
+    good: [], // Untuk clear 1-2 baris
+  };
+  const checkedShapes = new Set();
 
-  // Iterasi melalui semua kemungkinan blok
-  for (const block of allRegularBlocks) {
+  for (const block of blocksToCheck) {
     const shapeKey = JSON.stringify(block.shape);
-    if (checkedShapes.has(shapeKey)) continue; // Lewati jika bentuk ini sudah ditemukan solusinya
+    if (checkedShapes.has(shapeKey)) continue;
 
-    // Iterasi melalui semua kemungkinan posisi di papan
+    let bestClearForThisShape = 0;
+    let bestBlockData = null;
+
     for (let r = 0; r < BOARD_SIZE; r++) {
       for (let c = 0; c < BOARD_SIZE; c++) {
-        // Jika blok bisa diletakkan di sini
         if (isValidPlacement(block.shape, r, c)) {
-          // Cek apakah penempatan ini akan menghasilkan 'clear'
           const potential = checkPotentialClear(block.shape, r, c);
-          if (potential.rows.length > 0 || potential.cols.length > 0) {
-            clearingBlocks.push(block);
-            checkedShapes.add(shapeKey);
-            // Langsung hentikan pencarian untuk blok ini dan lanjut ke blok berikutnya
-            r = BOARD_SIZE; // Trik untuk menghentikan loop luar
-            break;
+          const totalClear = potential.rows.length + potential.cols.length;
+
+          if (totalClear > bestClearForThisShape) {
+            bestClearForThisShape = totalClear;
+            bestBlockData = block;
           }
         }
       }
+    }
+
+    if (bestBlockData) {
+      // [LOGIKA DIPERBAIKI] AI kini lebih agresif mencari kombo besar
+      if (bestClearForThisShape >= 4) {
+        // Mencakup 4, 5, 6, dst.
+        clearingBlocks.unbelievable.push(bestBlockData);
+      } else if (bestClearForThisShape === 3) {
+        clearingBlocks.great.push(bestBlockData);
+      } else if (bestClearForThisShape > 0) {
+        clearingBlocks.good.push(bestBlockData);
+      }
+      checkedShapes.add(shapeKey);
     }
   }
   return clearingBlocks;
@@ -984,22 +1234,47 @@ function findGuaranteedClearBlocks() {
 function handleDragMove(e) {
   if (!isDragging) return;
   e.preventDefault();
+
   const { x, y } = getEventCoordinates(e);
   const canvasRect = canvas.getBoundingClientRect();
   const block = currentBlocks[selectedBlockIndex];
   if (!block) return;
+
+  // Hitung posisi mouse relatif terhadap canvas
   const mouseX = x - canvasRect.left;
   const mouseY = y - canvasRect.top;
-  const blockWidth = block.shape[0].length * BLOCK_SIZE;
-  const blockHeight = block.shape.length * BLOCK_SIZE;
-  const ghostRow = Math.round((mouseY - blockHeight / 2) / BLOCK_SIZE);
-  const ghostCol = Math.round((mouseX - blockWidth / 2) / BLOCK_SIZE);
-  if (ghostBlockPos.row !== ghostRow || ghostBlockPos.col !== ghostCol) {
-    ghostBlockPos = { row: ghostRow, col: ghostCol };
-    // [DITAMBAHKAN] Cek potensi clear dan gambar ulang
+
+  // Pastikan mouse berada dalam canvas
+  if (
+    mouseX < 0 ||
+    mouseY < 0 ||
+    mouseX > canvas.width ||
+    mouseY > canvas.height
+  ) {
+    ghostBlockPos = { row: -1, col: -1 };
+    drawBoard();
+    return;
+  }
+
+  // Hitung posisi grid
+  const ghostCol = Math.floor(mouseX / BLOCK_SIZE);
+  const ghostRow = Math.floor(mouseY / BLOCK_SIZE);
+
+  // Sesuaikan posisi berdasarkan ukuran blok
+  const blockHeight = block.shape.length;
+  const blockWidth = block.shape[0].length;
+
+  // Adjust position so block doesn't go off the board
+  const adjustedRow = Math.min(ghostRow, BOARD_SIZE - blockHeight);
+  const adjustedCol = Math.min(ghostCol, BOARD_SIZE - blockWidth);
+
+  if (ghostBlockPos.row !== adjustedRow || ghostBlockPos.col !== adjustedCol) {
+    ghostBlockPos = { row: adjustedRow, col: adjustedCol };
+
+    // Gambar ulang dengan petunjuk clear yang potensial
     let clearHint = { rows: [], cols: [] };
-    if (isValidPlacement(block.shape, ghostRow, ghostCol)) {
-      clearHint = checkPotentialClear(block.shape, ghostRow, ghostCol);
+    if (isValidPlacement(block.shape, adjustedRow, adjustedCol)) {
+      clearHint = checkPotentialClear(block.shape, adjustedRow, adjustedCol);
     }
     drawBoard(clearHint);
   }
@@ -1028,63 +1303,35 @@ async function handleDragEnd(e) {
 // script.js
 function resizeCanvas() {
   const container = document.querySelector(".game-container");
-  if (!container) return; // Guard clause jika container tidak ditemukan
+  if (!container) return;
 
   const containerStyle = getComputedStyle(container);
   let canvasSize;
 
-  // Untuk tampilan mobile (di bawah 738px)
+  // Untuk tampilan mobile
   if (window.innerWidth < 738) {
-    const scorePanel = document.querySelector(".score-panel");
-    const previewPanel = document.querySelector(".preview-panel");
-
-    // Pastikan elemen ada sebelum mengukur
-    if (!scorePanel || !previewPanel) return;
-
-    const scorePanelHeight = scorePanel.offsetHeight;
-    const previewPanelHeight = previewPanel.offsetHeight;
-
-    // DIPERBAIKI: Hanya ada 2 gap antara 3 elemen (skor, canvas, pratinjau)
-    const totalGap = parseFloat(containerStyle.gap) * 2;
-    const verticalPadding =
-      parseFloat(containerStyle.paddingTop) +
-      parseFloat(containerStyle.paddingBottom);
-
-    // DIPERBAIKI: Menghapus tinggi tombol restart dari kalkulasi
-    const otherElementsHeight =
-      scorePanelHeight + previewPanelHeight + totalGap;
-
     const availableWidth =
       container.clientWidth -
       parseFloat(containerStyle.paddingLeft) -
       parseFloat(containerStyle.paddingRight);
-    const availableHeight =
-      container.clientHeight - otherElementsHeight - verticalPadding;
-
-    canvasSize = Math.min(availableWidth, availableHeight);
-  } else {
-    // Untuk tampilan desktop (di atas 738px), logika grid lebih sederhana
-    const containerHeight =
-      container.clientHeight -
-      parseFloat(containerStyle.paddingTop) -
-      parseFloat(containerStyle.paddingBottom);
+    canvasSize = Math.min(availableWidth, 400); // Batasi maksimal 400px
+  }
+  // Untuk tampilan desktop
+  else {
     const availableWidth = canvasWrapper.clientWidth;
-
-    canvasSize = Math.min(containerHeight, availableWidth);
+    canvasSize = Math.min(availableWidth, 500); // Batasi maksimal 500px
   }
 
-  // Membersihkan nilai ukuran agar pas dengan grid
-  canvasSize = Math.max(150, canvasSize); // Batas ukuran minimal
-  canvasSize = Math.floor(canvasSize / BOARD_SIZE) * BOARD_SIZE; // Pastikan kelipatan dari BOARD_SIZE
+  // Pastikan ukuran canvas adalah kelipatan dari BOARD_SIZE
+  BLOCK_SIZE = Math.floor(canvasSize / BOARD_SIZE);
+  canvasSize = BLOCK_SIZE * BOARD_SIZE;
 
-  // Terapkan ukuran baru ke canvas
+  // Terapkan ukuran baru
   canvas.width = canvas.height = canvasSize;
-  BLOCK_SIZE = canvas.width / BOARD_SIZE;
 
-  // Gambar ulang jika game sudah berjalan
+  // Gambar ulang papan
   if (typeof drawBoard === "function") {
     drawBoard();
-    updateUI();
   }
 }
 
@@ -1107,9 +1354,9 @@ function setupGameEventListeners() {
   window.addEventListener("resize", resizeCanvas);
 }
 
-// script.js
 window.addEventListener("load", () => {
-  // Setup event listener dasar terlebih dahulu
+  // --- SETUP EVENT LISTENER DASAR (TIDAK BERUBAH) ---
+  startTitleAnimation();
   mainMenuInfoButton.addEventListener("click", showInfoModal);
   inGameInfoButton.addEventListener("click", showInfoModal);
   closeInfoModalButton.addEventListener("click", hideInfoModal);
@@ -1118,47 +1365,229 @@ window.addEventListener("load", () => {
   closeMenuButton.addEventListener("click", hideInGameMenu);
   soundToggleButton.addEventListener("click", toggleSound);
   backToMenuButton.addEventListener("click", goBackToMainMenu);
-  setupGameEventListeners();
+  topBarHighScore.addEventListener("click", showHighScoresModal);
+  closeHighScoresModal.addEventListener("click", hideHighScoresModal);
+  resetScoresButtonModal.addEventListener("click", () => {
+    if (confirm("Anda yakin ingin menghapus semua peringkat skor?")) {
+      localStorage.removeItem(HIGH_SCORES_KEY);
+      displayHighScores();
+    }
+  });
+  const shareScoreGameOverButton =
+    document.getElementById("shareScoreGameOver");
+  const finalScoreElement = document.getElementById("finalScore");
 
-  // Coba muat state game yang ada
+  shareScoreGameOverButton.addEventListener("click", () => {
+    const finalScore = finalScoreElement.textContent;
+    generateScoreImage(finalScore, null); // Tidak ada peringkat di Game Over
+  });
+  const shareScoreRankingButton = document.getElementById("shareScoreRanking");
+  const highScoresListModal = document.getElementById("highScoresListModal");
+
+  shareScoreRankingButton.addEventListener("click", () => {
+    // [DIPERBAIKI] Menggunakan nama fungsi yang benar: loadHighScores
+    const highScores = loadHighScores();
+
+    // [DIPERBAIKI] Mengambil skor dari papan skor dan membersihkan format angka
+    const currentScoreText = document.getElementById("scoreValue").textContent;
+    const currentScore = parseInt(currentScoreText.replace(/\./g, ""), 10) || 0;
+
+    // Cari peringkat pemain saat ini dalam daftar 5 teratas
+    let playerRanking = 0; // Default 0 jika tidak ditemukan
+    const scoreIndex = highScores.indexOf(currentScore);
+
+    if (scoreIndex !== -1) {
+      playerRanking = scoreIndex + 1;
+    }
+
+    // Generate gambar hanya jika skornya ada di peringkat, atau berikan pesan default
+    if (playerRanking > 0) {
+      generateScoreImage(currentScore.toLocaleString("id-ID"), playerRanking);
+    } else {
+      // Jika skor saat ini tidak masuk peringkat, bagikan skor teratas saja
+      const topScore = highScores.length > 0 ? highScores[0] : 0;
+      generateScoreImage(topScore.toLocaleString("id-ID"), 1);
+    }
+  });
+  setupGameEventListeners();
+  displayHighScores();
+
+  // --- LOGIKA ALUR PERMAINAN BARU ---
+
+  // 1. Selalu cek apakah ada game yang tersimpan
   const savedGame = loadGameState();
 
   if (savedGame) {
-    // Jika ada game tersimpan, langsung masuk ke permainan
+    // JIKA ADA GAME TERSIMPAN:
+    // Tampilkan tombol "Lanjutkan" dan siapkan game di latar belakang
+    continueGameButton.classList.remove("hidden");
+
+    // Siapkan game lanjutan di memory, tapi jangan tampilkan dulu
     board = savedGame.board;
     currentBlocks = savedGame.currentBlocks;
     score = savedGame.score;
     comboCounter = savedGame.comboCounter;
-    isGameOver = false;
-    highScore = parseInt(localStorage.getItem(HIGH_SCORE_KEY) || "0");
-    selectedBlockIndex = -1;
-    isDragging = false;
-    ghostBlockPos = { row: -1, col: -1 };
-    mainMenu.style.display = "none";
-    gameWrapper.classList.remove("hidden");
+    const scores = loadHighScores();
+    highScore = scores.length > 0 ? scores[0] : 0;
 
-    // Panggil fungsi untuk memuat aset visual
-    loadBlockImages(() => {
-      if (isSoundOn) backgroundSound.play();
-      resizeCanvas();
-      updateUI(); // Perbarui UI dengan data yang dimuat
-      drawBoard();
-    });
+    loadBlockImages(); // Muat aset di latar belakang
   } else {
-    // Jika tidak ada game tersimpan, tampilkan menu utama seperti biasa
-    loadBlockImages(); // Cukup panggil untuk memuat aset di latar belakang
-    initGame(); // [DITAMBAHKAN] Siapkan game baru di latar belakang
+    // JIKA TIDAK ADA GAME TERSIMPAN:
+    // Pastikan tombol "Lanjutkan" tersembunyi dan siapkan game baru
+    continueGameButton.classList.add("hidden");
+    loadBlockImages();
+    initGame();
   }
 
-  // Event listener untuk memulai game BARU dari menu utama
-  // Event listener untuk tombol "Mulai Game" atau "Lanjutkan"
-  startGameButton.addEventListener("click", () => {
-    // Tombol ini sekarang hanya bertugas menampilkan layar game
+  // 2. Setup event listener untuk tombol-tombol utama
+
+  // Tombol "Lanjutkan": Memuat state game yang sudah ada
+  continueGameButton.addEventListener("click", () => {
     mainMenu.style.display = "none";
     gameWrapper.classList.remove("hidden");
     if (isSoundOn) backgroundSound.play();
 
-    // Papan digambar ulang dengan state yang ada (baik baru maupun lanjutan)
+    // Perbarui UI dengan data yang dimuat dari savedGame
+    updateUI();
+    resizeCanvas();
+    drawBoard();
+  });
+
+  // Tombol "Mulai Game": Selalu memulai dari awal
+  startGameButton.addEventListener("click", () => {
+    // Hapus game lama dan reset semuanya
+    clearGameState();
+    initGame();
+
+    // Sembunyikan tombol "Lanjutkan" karena game lama sudah dihapus
+    continueGameButton.classList.add("hidden");
+
+    mainMenu.style.display = "none";
+    gameWrapper.classList.remove("hidden");
+    if (isSoundOn) backgroundSound.play();
+
+    updateUI();
     resizeCanvas();
   });
 });
+
+// [FUNGSI BARU YANG DIPERBAIKI] Animasi judul berurutan
+function startTitleAnimation() {
+  const letters = document.querySelectorAll(".title-word .letter");
+  if (letters.length === 0) return;
+
+  let currentLetterIndex = 0; // [DIUBAH] Inisialisasi penghitung untuk urutan
+
+  setInterval(() => {
+    // Ambil huruf sesuai urutan
+    const currentLetter = letters[currentLetterIndex];
+
+    // Tambahkan kelas untuk memicu animasi
+    currentLetter.classList.add("blinking");
+
+    // Hapus kelas setelah animasi selesai agar bisa diulang
+    setTimeout(() => {
+      currentLetter.classList.remove("blinking");
+    }, 1500); // Durasi animasi dari CSS
+
+    // [DIUBAH] Naikkan penghitung untuk huruf berikutnya
+    currentLetterIndex++;
+
+    // Jika sudah di huruf terakhir, kembali ke awal untuk loop
+    if (currentLetterIndex >= letters.length) {
+      currentLetterIndex = 0;
+    }
+  }, 500); // Ulangi setiap 0.5 detik untuk efek gelombang
+}
+
+// ======================================================================
+// [FUNGSI DIUBAH] - Logika Berbagi Menggunakan Web Share API
+// ======================================================================
+async function generateScoreImage(score, ranking) {
+  try {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = 800;
+    canvas.height = 400;
+
+    // Muat gambar latar belakang menggunakan Promise
+    const backgroundImage = await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = "assets/bgscore.png"; // Pastikan path ini benar
+    });
+
+    // Gambar semua elemen ke canvas
+    ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height); // Lapisan gelap untuk kontras
+
+    ctx.fillStyle = "#ffffff";
+    ctx.textAlign = "center";
+    ctx.font = "bold 52px Inter";
+    ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+    ctx.shadowBlur = 10;
+    ctx.fillText("Pencapaian Block Blaze!", canvas.width / 2, 80);
+
+    ctx.font = "bold 96px Inter";
+    ctx.fillStyle = "#FFD700"; // Warna emas untuk skor
+    ctx.fillText(score, canvas.width / 2, 200);
+
+    let shareText = `Wow! Saya dapat skor ${score} di Block Blaze!`;
+
+    if (ranking) {
+      ctx.font = "32px Inter";
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(`Peringkat #${ranking}`, canvas.width / 2, 260);
+      shareText += ` dan mencapai peringkat #${ranking}! Bisakah kamu mengalahkan ini?`;
+    } else {
+      ctx.font = "32px Inter";
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText("Ayo kalahkan skor ini!", canvas.width / 2, 260);
+      shareText += ` Bisakah kamu mengalahkan ini?`;
+    }
+
+    ctx.font = "italic 24px Inter";
+    ctx.fillText(
+      "mainkan di https://rynnn10.github.io/Game-Block-Blast/",
+      canvas.width / 2,
+      350
+    );
+    ctx.shadowBlur = 0; // Matikan shadow untuk teks kecil
+
+    // Konversi canvas ke blob (format data yang bisa dibagikan)
+    const blob = await new Promise((resolve) =>
+      canvas.toBlob(resolve, "image/png")
+    );
+    if (!blob) {
+      throw new Error("Gagal membuat data gambar.");
+    }
+
+    const file = new File([blob], "skor-block-blaze.png", {
+      type: "image/png",
+    });
+    const shareData = {
+      title: "Skor Block Blaze",
+      text: shareText,
+      files: [file],
+    };
+
+    // Cek apakah browser mendukung Web Share API untuk file
+    if (navigator.canShare && navigator.canShare(shareData)) {
+      await navigator.share(shareData);
+    } else {
+      // Fallback jika tidak didukung: tawarkan untuk mengunduh gambar
+      console.log("Web Share API tidak didukung, menggunakan metode unduh.");
+      const link = document.createElement("a");
+      link.download = "skor-block-blaze.png";
+      link.href = URL.createObjectURL(blob);
+      link.click();
+      URL.revokeObjectURL(link.href); // Bersihkan memori
+    }
+  } catch (err) {
+    console.error("Gagal membagikan:", err);
+    // Beri tahu pengguna jika ada masalah (misalnya, mereka membatalkan dialog share)
+    // alert("Gagal membagikan skor. Mungkin Anda membatalkannya.");
+  }
+}
