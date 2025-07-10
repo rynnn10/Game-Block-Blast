@@ -23,7 +23,7 @@ body {
   color: var(--text-light);
   margin: 0;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: hidden;
   /* Hapus padding dari sini */
 }
 
@@ -153,7 +153,7 @@ body {
   max-width: 900px;
   max-height: calc(100vh - 2rem);
   position: relative;
-  margin-bottom: 10px;
+  margin-bottom: -40px;
 }
 /* [DITAMBAHKAN] Gaya untuk konten di modal info */
 .info-content {

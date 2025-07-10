@@ -5,13 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Block Blaze</title>
     <link rel="icon" href="assets/icon.png" />
+
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#1a202c" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap"
       rel="stylesheet"
     />
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -259,7 +262,7 @@
         </button>
       </div>
     </div>
-    <footer>&copy;Copyright by Riyan 2025</footer>
+    <footer style="display: none">&copy;Copyright by Riyan 2025</footer>
 
     <audio id="background-sound" src="bgsound.mp3" loop></audio>
     <audio id="place-sound" src="place.mp3"></audio>
@@ -289,5 +292,23 @@
       </div>
     </div>
     <script src="script.js" defer></script>
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then((registration) => {
+              console.log(
+                "ServiceWorker registration successful with scope: ",
+                registration.scope
+              );
+            })
+            .catch((error) => {
+              console.log("ServiceWorker registration failed: ", error);
+            });
+        });
+      }
+    </script>
   </body>
 </html>
